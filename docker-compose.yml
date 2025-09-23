@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ledgerx
+      POSTGRES_PASSWORD: ledgerx
+      POSTGRES_DB: ledgerx
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.1.11
+    command: ["redpanda","start","--overprovisioned","--smp","1","--memory","1G","--reserve-memory","0M","--node-id","0","--check=false","--set","redpanda.enable_idempotence=true"]
+    ports:
+      - "9092:9092"   # Kafka
+      - "9644:9644"   # Redpanda admin API
+
+volumes:
+  pgdata:

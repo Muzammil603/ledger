@@ -1,0 +1,24 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ledgerx
+    username: ledgerx
+    password: ledgerx
+  flyway:
+    enabled: true
+    table: flyway_history_query
+    baseline-on-migrate: true
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: ledgerx-projections-v3   # <-- new group to read from beginning
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest
+
+logging:
+  level:
+    org.springframework.kafka: INFO
+    com.ledgerx.query: INFO
