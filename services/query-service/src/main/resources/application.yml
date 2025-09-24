@@ -13,10 +13,25 @@ spring:
   kafka:
     bootstrap-servers: localhost:9092
     consumer:
-      group-id: ledgerx-projections-v3   # <-- new group to read from beginning
+      group-id: ledgerx-projections-replay
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       auto-offset-reset: earliest
+    listener:
+      ack-mode: batch
+    properties:
+      max.poll.records: 500
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,mappings
+  endpoint:
+    prometheus:
+      enabled: true
+    health:
+      show-details: never
 
 logging:
   level:

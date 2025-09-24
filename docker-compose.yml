@@ -17,5 +17,24 @@ services:
       - "9092:9092"   # Kafka
       - "9644:9644"   # Redpanda admin API
 
+  prometheus:
+    image: prom/prometheus:v2.55.0
+    container_name: ledgerx-prometheus
+    volumes:
+      - ./ops/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - redpanda
+      - postgres
+
+  grafana:
+    image: grafana/grafana-oss:11.1.0
+    container_name: ledgerx-grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
 volumes:
   pgdata:

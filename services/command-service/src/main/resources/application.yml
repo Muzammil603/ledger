@@ -13,8 +13,24 @@ spring:
   kafka:
     bootstrap-servers: localhost:9092
     producer:
+      acks: all
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      properties:
+        enable.idempotence: true
+        linger.ms: 5
+        batch.size: 32768
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    prometheus:
+      enabled: true
+    health:
+      show-details: never
 
 logging:
   level:

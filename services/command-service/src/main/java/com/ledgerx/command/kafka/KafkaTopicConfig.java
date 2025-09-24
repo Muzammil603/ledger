@@ -15,4 +15,12 @@ public class KafkaTopicConfig {
         .replicas(1)
         .build();
   }
+
+  @Bean
+  public NewTopic transfersTopicV1() {
+    return TopicBuilder.name("ledgerx.transfers.events.v1")
+        .partitions(1)
+        .replicas(1)
+        .build();
+  }
 }
