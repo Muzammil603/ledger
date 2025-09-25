@@ -32,6 +32,12 @@ management:
       enabled: true
     health:
       show-details: never
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        ledgerx.outbox.publish.latency: true
+        ledgerx.projection.account.latency: true
 
 logging:
   level:

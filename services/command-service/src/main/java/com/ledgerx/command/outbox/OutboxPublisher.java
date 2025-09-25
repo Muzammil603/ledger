@@ -13,8 +13,10 @@ import io.micrometer.core.instrument.Timer;
 
 import java.util.List; import java.util.Map; import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 @Component
+@ConditionalOnProperty(name = "ledgerx.outbox.enabled", havingValue = "true", matchIfMissing = true)
 public class OutboxPublisher {
   private static final Logger log = LoggerFactory.getLogger(OutboxPublisher.class);
   private final JdbcTemplate jdbc; private final KafkaTemplate<String,String> kafka;
