@@ -1,17 +1,17 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/ledgerx
-    username: ledgerx
-    password: ledgerx
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://host.docker.internal:5432/ledgerx}
+    username: ${SPRING_DATASOURCE_USERNAME:ledgerx}
+    password: ${SPRING_DATASOURCE_PASSWORD:ledgerx}
   flyway:
     enabled: true
     table: flyway_history_command
     baseline-on-migrate: true
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:host.docker.internal:9092}
     producer:
       acks: all
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -20,6 +20,9 @@ spring:
         enable.idempotence: true
         linger.ms: 5
         batch.size: 32768
+    admin:
+      auto-create: false
+      fail-fast: false
 
 management:
   endpoints:
