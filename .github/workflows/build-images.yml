@@ -37,6 +37,7 @@ jobs:
         with:
           context: ./services/command-service
           push: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main') }}
+          platforms: linux/amd64,linux/arm64
           tags: |
             ${{ env.REGISTRY }}/${{ steps.vars.outputs.owner_lc }}/ledgerx-command:latest
             ${{ env.REGISTRY }}/${{ steps.vars.outputs.owner_lc }}/ledgerx-command:${{ github.sha }}
@@ -48,6 +49,7 @@ jobs:
         with:
           context: ./services/query-service
           push: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main') }}
+          platforms: linux/amd64,linux/arm64
           tags: |
             ${{ env.REGISTRY }}/${{ steps.vars.outputs.owner_lc }}/ledgerx-query:latest
             ${{ env.REGISTRY }}/${{ steps.vars.outputs.owner_lc }}/ledgerx-query:${{ github.sha }}
