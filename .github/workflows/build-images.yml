@@ -13,7 +13,7 @@ jobs:
       packages: write          # push images to GHCR
     env:
       REGISTRY: ghcr.io
-      IMAGE_OWNER: ${{ github.repository_owner }}
+      IMAGE_OWNER: ${{ toLower(github.repository_owner) }}
 
     steps:
       - name: Checkout
@@ -33,7 +33,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./services/command-service
-          push: true
+          push: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main') }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/ledgerx-command:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/ledgerx-command:${{ github.sha }}
@@ -44,7 +44,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./services/query-service
-          push: true
+          push: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main') }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/ledgerx-query:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/ledgerx-query:${{ github.sha }}
