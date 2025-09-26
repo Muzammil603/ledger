@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: query-service
+  namespace: ledgerx
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: query-service } }
+  template:
+    metadata:
+      labels: { app: query-service }
+    spec:
+      containers:
+        - name: app
+          image: ghcr.io/muzammil603/ledgerx-query:latest
+          imagePullPolicy: Always
+          ports: [ { containerPort: 8081 } ]
+          env:
+            - name: SPRING_DATASOURCE_URL
+              valueFrom: { secretKeyRef: { name: ledgerx-secrets, key: DB_URL } }
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom: { secretKeyRef: { name: ledgerx-secrets, key: DB_USERNAME } }
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom: { secretKeyRef: { name: ledgerx-secrets, key: DB_PASSWORD } }
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              valueFrom: { configMapKeyRef: { name: ledgerx-config, key: SPRING_KAFKA_BOOTSTRAP_SERVERS } }
+            - name: SPRING_FLYWAY_TABLE
+              value: "flyway_history_query"
+            - name: SPRING_FLYWAY_BASELINE_ON_MIGRATE
+              valueFrom: { configMapKeyRef: { name: ledgerx-config, key: SPRING_FLYWAY_BASELINE_ON_MIGRATE } }
+          readinessProbe:
+            httpGet: { path: /actuator/health, port: 8081 }
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /actuator/health, port: 8081 }
+            initialDelaySeconds: 30
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: query-service
+  namespace: ledgerx
+spec:
+  selector: { app: query-service }
+  ports:
+    - name: http
+      port: 8081
+      targetPort: 8081
+  type: ClusterIP
