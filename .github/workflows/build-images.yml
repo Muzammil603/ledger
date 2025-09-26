@@ -28,6 +28,11 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64,amd64
+
       - name: Compute lowercase owner
         id: vars
         run: echo "owner_lc=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_OUTPUT
@@ -39,8 +44,8 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ghcr.io/${{ env.IMAGE_OWNER }}/ledgerx-command:latest
-            ghcr.io/${{ env.IMAGE_OWNER }}/ledgerx-command:${{ github.sha }}
+            ghcr.io/${{ steps.vars.outputs.owner_lc }}/ledgerx-command:latest
+            ghcr.io/${{ steps.vars.outputs.owner_lc }}/ledgerx-command:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -51,7 +56,7 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ghcr.io/${{ env.IMAGE_OWNER }}/ledgerx-query:latest
-            ghcr.io/${{ env.IMAGE_OWNER }}/ledgerx-query:${{ github.sha }}
+            ghcr.io/${{ steps.vars.outputs.owner_lc }}/ledgerx-query:latest
+            ghcr.io/${{ steps.vars.outputs.owner_lc }}/ledgerx-query:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
