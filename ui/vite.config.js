@@ -13,7 +13,7 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/cmd/, ''),
       },
-      // Everything under /qry -> http://localhost:8082 (query-service)
+      // Everything under /qry -> http://localhost:8081 (query-service)
       '/qry': {
         target: 'http://localhost:8082',
         changeOrigin: true,
