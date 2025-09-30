@@ -13,3 +13,4 @@ target/
 # k6 outputs
 *.json
 *.csv
+ops/otel/*.jar
