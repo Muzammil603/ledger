@@ -36,5 +36,13 @@ services:
     depends_on:
       - prometheus
 
+  jaeger:
+    image: jaegertracing/all-in-one:1.56
+    container_name: ledgerx-jaeger
+    ports:
+      - "16686:16686"   # Web UI
+      - "4317:4317"     # OTLP gRPC (what the agent will send to)
+      - "4318:4318"     # OTLP HTTP 
+
 volumes:
   pgdata:

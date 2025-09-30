@@ -1,7 +1,11 @@
 server:
-  port: 8081
+  port: ${SERVER_PORT:8082}
 
 spring:
+
+  application:
+    name: query-service
+
   datasource:
     url: jdbc:postgresql://localhost:5432/ledgerx
     username: ledgerx
@@ -23,6 +27,14 @@ spring:
       max.poll.records: 500
 
 management:
+
+  tracing:
+    sampling:
+      probability: ${MANAGEMENT_TRACING_SAMPLING_PROBABILITY:1.0}
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+
   endpoints:
     web:
       exposure:
