@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { cmd, qry } from "../lib/api";
 import Badge from "./common/Badge";
 import Spinner from "./common/Spinner";
@@ -8,6 +8,41 @@ import { downloadCSV } from "../lib/csv";
 
 const TERMINAL = new Set(["COMPLETED","FAILED","COMPENSATED"]);
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+// SSE helper with auto-retry (exponential backoff + jitter)
+function openSSE(
+  url,
+  { onRow, onHeartbeat, onMessage, onOpen, onError, min = 500, max = 15000 } = {}
+) {
+  let es, closed = false, delay = min, timer;
+
+  const connect = () => {
+    if (closed) return;
+    es = new EventSource(url);
+
+    es.onopen = () => { delay = min; onOpen && onOpen(); };
+
+    if (onMessage) es.onmessage = (e) => onMessage(e);
+    es.addEventListener("row", (e) => onRow && onRow(e));
+    es.addEventListener("heartbeat", (e) => onHeartbeat && onHeartbeat(e));
+
+    es.onerror = () => {
+      onError && onError(new Error("SSE disconnected"));
+      try { es.close(); } catch {}
+      if (closed) return;
+      const jitter = Math.floor(Math.random() * 0.3 * delay);
+      const wait = Math.min(max, delay + jitter);
+      timer = setTimeout(connect, wait);
+      delay = Math.min(max, Math.floor(delay * 1.7));
+    };
+  };
+
+  connect();
+
+  return {
+    close() { closed = true; clearTimeout(timer); es && es.close(); },
+  };
+}
 
 export default function TransfersPanel(){
   const toast = useToast();
@@ -29,7 +64,7 @@ export default function TransfersPanel(){
   // extras
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [live, setLive] = useState(false);
-  const esRef = useRef(null);
+  const [liveCtl, setLiveCtl] = useState(null);
 
   function genKey(){ return `${transferId}-${Date.now()}`; }
 
@@ -111,38 +146,27 @@ export default function TransfersPanel(){
 
   useEffect(() => { loadList(); }, []);
 
-  // Live SSE hookup
+  // Live SSE hookup with auto-retry
   useEffect(() => {
     if (!live) {
-      if (esRef.current) { esRef.current.close(); esRef.current = null; }
+      if (liveCtl) { liveCtl.close(); setLiveCtl(null); }
       return;
     }
-    const es = new EventSource("/qry/api/stream/transfers");
-    esRef.current = es;
-
-    es.onmessage = (ev) => {
-      try {
-        const data = JSON.parse(ev.data);
-        if (!data || !data.transfer_id) return;
-        setList(prev => upsertTransfer(prev, data));
-        setStatusRow(prev => (prev && prev.transfer_id === data.transfer_id) ? data : prev);
-      } catch(_) {}
-    };
-
-    es.addEventListener("row", (ev) => {
-      try {
-        const data = JSON.parse(ev.data);
-        if (!data || !data.transfer_id) return;
-        setList(prev => upsertTransfer(prev, data));
-        setStatusRow(prev => (prev && prev.transfer_id === data.transfer_id) ? data : prev);
-      } catch(_) {}
+    const ctl = openSSE("/qry/api/stream/transfers", {
+      onRow: (ev) => {
+        try {
+          const data = JSON.parse(ev.data);
+          if (!data || !data.transfer_id) return;
+          setList(prev => upsertTransfer(prev, data));
+          setStatusRow(prev => (prev && prev.transfer_id === data.transfer_id) ? data : prev);
+        } catch {}
+      },
+      onError: () => {
+        toast.addToast("Live stream dropped. Reconnecting…", { type: "error" });
+      },
     });
-
-    es.onerror = () => {
-      toast.addToast("Live stream error. Retrying…", { type: "error" });
-    };
-
-    return () => { es.close(); esRef.current = null; };
+    setLiveCtl(ctl);
+    return () => { ctl.close(); setLiveCtl(null); };
   }, [live, toast]);
 
   // Fallback: session history if backend list is unavailable
